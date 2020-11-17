@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import Preprocess
+import calc_accuracy
 def subsample(datasets, ratio):
     m_examples, n_features = datasets.shape
     choose_sample = int(m_examples * ratio)
@@ -119,5 +121,17 @@ def random_forest(train, test, max_depth, min_size, ratio, n_trees, n_features):
         trees.append(tree)
     predictions = [bagging_predict(trees, test.iloc[i]) for i in test.shape[0]]
     return predictions
+def evaluate_algorithm(dataset, n_folds, max_depth, min_size, ratio, n_trees, n_features):
+    folds = Preprocess.CVsplit(dataset=dataset, k_folds=n_folds)
+    scores = list()
+    for _ in len(folds):
+        fold_copy = folds.copy()
+        test_set = fold_copy.pop(0)
+        train_set = pd.concat(fold_copy)
+        predicted = random_forest(train_set, test_set,max_depth, min_size, ratio, n_trees, n_features)
+        actual = test_set.iloc[-1]
+        accuracy = calc_accuracy.accuracy_metric(actual, predicted)
+        scores.append(accuracy)
+    return scores
 
 
